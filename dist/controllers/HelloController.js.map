@@ -1,0 +1,1 @@
+{"version":3,"file":"HelloController.js","sourceRoot":"","sources":["../../src/controllers/HelloController.ts"],"names":[],"mappings":";;;;AAAA,6DAAkE;AAClE,4BAA0B;AAGnB,IAAM,eAAe,GAArB,MAAM,eAAe;IAExB,KAAK;QACD,OAAO,cAAc,CAAC;IAC1B,CAAC;CACJ,CAAA;AAJG;IAAC,IAAA,yBAAG,EAAC,GAAG,CAAC;;;;4CAGR;AAJQ,eAAe;IAD3B,IAAA,gCAAU,EAAC,QAAQ,CAAC;GACR,eAAe,CAK3B;AALY,0CAAe"}
