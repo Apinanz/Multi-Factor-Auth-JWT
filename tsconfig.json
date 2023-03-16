@@ -24,6 +24,6 @@
       "tslib" : ["path/to/node_modules/tslib/tslib.d.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.json", ".env", "knexfile.ts", "knexfile.ts"],
+  "include": ["src/**/*.ts", "src/**/*.json", ".env", "knexfile.ts", "knexfile.ts", "UserDatabase.ts"],
   "exclude": ["node_modules"]
 }

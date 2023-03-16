@@ -3,11 +3,15 @@ import { createExpressServer } from 'routing-controllers';
 import Container from 'typedi';
 import dotenv from 'dotenv';
 import { AuthenticationController } from './controllers/AuthenticationController';
+import { mongoClient } from './database/mongoose';
+import verifyToken from './middleware/Authentication';
+
 
 const PORT = 4000;
 console.info(`Starting server on http://localhost:${PORT}`);
-const routes = [AuthenticationController]; // To be changed soon
 
+mongoClient(process.env.MONGO_URL)
+const routes = [AuthenticationController];
 const app = createExpressServer(
     {
         controllers: routes,

@@ -1,5 +1,4 @@
 import { IUser } from "../models/Authentication";
-import { UserRepository } from "../repository/UserRepository";
 import Container, { Inject, Service } from "typedi";
 import { DisableRequest, LogInRequest, RegisterRequest, VerifyRequest } from "./requests/AuthenticationRequest";
 import * as uuid from "uuid";
@@ -8,21 +7,23 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import speakeasy from 'speakeasy'
 import qrcode from 'qrcode'
+import User from "../models/User";
 @Service()
 export class AuthenticationService {
-    @Inject()
-    private _userRepository: UserRepository
 
     public async register(register: RegisterRequest) {
         try {
-            const user = await this._userRepository.createUser({
-                id: uuid.v4(),
-                name: register.name,
+
+            await User.create({
+                user_id: uuid.v4(),
+                firstname: register.firstname,
+                lastname: register.lastname,
                 email: register.email,
                 password: await bcrypt.hash(register.password, 10),
                 created_at: new Date(),
                 updated_at: new Date()
-            } as IUser)
+            })
+            return { register }
         } catch (error) {
             throw error
         }
@@ -30,17 +31,21 @@ export class AuthenticationService {
 
     public async logIn(logIn: LogInRequest) {
         try {
-            const JWT_SECRET = crypto.randomBytes(64).toString('hex');
-            const user = await this._userRepository.getUserByEmail(logIn.email)
+
+            const user = await User.findOne({ email: logIn.email })
+
             if (user) {
                 const isPasswordValid = await bcrypt.compare(logIn.password, user.password)
                 if (isPasswordValid) {
-                    const token = await jwt.sign({
-                        id: user._id,
-                        name: user.name,
+                    const token = jwt.sign({
+                        user_id: user.user_id,
+                        firstname: user.firstname,
+                        lastname: user.lastname,
                         email: user.email,
-                    }, JWT_SECRET);
-                    return { ...user, token: token, secert: JWT_SECRET }
+                    }, process.env.JWT_SECRET);
+                    user.token = token;
+                    user.save();
+                    return user
                 }
             }
         } catch (error) {
@@ -60,7 +65,7 @@ export class AuthenticationService {
 
     public async verifyOTP(verify: VerifyRequest) {
         try {
-            const user = await this._userRepository.getUserByUserID(verify.user_id);
+            const user = await User.findOne({ user_id: verify.user_id });
             if (user) {
                 const auth = speakeasy.totp.verify({
                     secret: verify.otp,
@@ -68,9 +73,14 @@ export class AuthenticationService {
                     token: verify.token
                 })
                 console.log(auth);
+                console.log(user.multi_factor);
+
                 if (auth) {
-                    await this._userRepository.updateMultiFactor(verify.user_id, true, verify.otp)
-                    return 'enable multi-factor'
+                    if (!user.multi_factor) {
+                        await User.updateOne({ user_id: verify.user_id, multi_factor: true, secret: verify.otp })
+                        return 'enable multi-factor'
+                    }
+                    return 'verify multi-factor'
                 }
             }
         } catch (error) {
@@ -80,11 +90,9 @@ export class AuthenticationService {
 
     public async disableMultiFactor(disable: DisableRequest) {
         try {
-            const user = await this._userRepository.getUserByUserID(disable.user_id);
-            console.log(user.multi_factor);
-
+            const user = await User.findOne({ user_id: disable.user_id });
             if (user && user.multi_factor) {
-                await this._userRepository.updateMultiFactor(disable.user_id, false, null)
+                await User.updateOne({ user_id: disable.user_id, multi_factor: false, secret: null })
                 return 'disable multi-factor'
             }
         } catch (error) {

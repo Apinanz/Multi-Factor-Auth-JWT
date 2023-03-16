@@ -1,9 +1,10 @@
 import 'reflect-metadata';
 import { RequestScopeContainer } from '../decorators/RequestScopeContainerDecorator';
-import { Body, HttpCode, JsonController, Post } from "routing-controllers";
+import { Body, HttpCode, JsonController, Post, UseBefore } from "routing-controllers";
 import { AuthenticationService } from "../services/AuthenticationService";
 import { DisableRequest, LogInRequest, RegisterRequest, VerifyRequest } from "../services/requests/AuthenticationRequest";
 import { ContainerInstance } from "typedi";
+import verifyToken from '../middleware/Authentication';
 
 @JsonController('/api/auth')
 export class AuthenticationController {
@@ -16,8 +17,8 @@ export class AuthenticationController {
     ) {
         try {
             const authenticationService = container.get(AuthenticationService)
-            authenticationService.register(registerRequest)
-            return registerRequest;
+            const response = authenticationService.register(registerRequest)
+            return response;
         } catch (error) {
             throw error;
         }
@@ -40,6 +41,7 @@ export class AuthenticationController {
 
     @HttpCode(201)
     @Post('/otp/generate')
+    @UseBefore(verifyToken)
     public generate(
         @RequestScopeContainer() container: ContainerInstance,
     ) {
@@ -54,6 +56,7 @@ export class AuthenticationController {
 
     @HttpCode(201)
     @Post('/otp/verify')
+    @UseBefore(verifyToken)
     public verify(
         @RequestScopeContainer() container: ContainerInstance,
         @Body() verifyRequest: VerifyRequest
@@ -69,6 +72,7 @@ export class AuthenticationController {
 
     @HttpCode(201)
     @Post('/otp/disable')
+    @UseBefore(verifyToken)
     public disableMultiFactor(
         @RequestScopeContainer() container: ContainerInstance,
         @Body() disableRequest: DisableRequest

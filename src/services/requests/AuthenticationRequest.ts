@@ -3,7 +3,11 @@ import { isNotEmpty, IsNotEmpty, IsString } from "class-validator";
 export class RegisterRequest {
     @IsNotEmpty()
     @IsString()
-    name: string
+    firstname: string
+
+    @IsNotEmpty()
+    @IsString()
+    lastname: string
 
     @IsNotEmpty()
     email: string
